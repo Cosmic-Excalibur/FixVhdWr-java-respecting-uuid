@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>cn.ellacat.tools</groupId>
+    <artifactId>fixvhdwr</artifactId>
+    <version>1.1-SNAPSHOT</version>
+
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <tag>master</tag>
+        <url>git:git@gitee.com:wjc133/FixVhdWr-java.git</url>
+        <connection>scm:git:git@gitee.com:wjc133/FixVhdWr-java.git</connection>
+        <developerConnection>scm:git:git@gitee.com:wjc133/FixVhdWr-java.git</developerConnection>
+    </scm>
+
+    <developers>
+        <developer>
+            <name>wjc133</name>
+            <email>cmsdwjc133@gmail.com</email>
+            <organization>EllaCat</organization>
+        </developer>
+    </developers>
+
+    <properties>
+        <java.version>1.8</java.version>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>9</source>
+                    <target>9</target>
+                </configuration>
+            </plugin>
+
+            <plugin><!-- 构造MANIFEST.MF文件 -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <!-- 将使用此目录作为启动的classpath参数 -->
+                            <classpathPrefix>lib/</classpathPrefix>
+                            <!-- 此处根据项目的Main类进行修改 -->
+                            <mainClass>cn.ellacat.tools.fixvhdwr.Bootstrap</mainClass>
+                            <!-- 解决snapshot的jar文件名与MANIFEST.MF文件中不一致的问题 -->
+                            <useUniqueVersions>false</useUniqueVersions>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.9</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <additionalparam>-Xdoclint:none</additionalparam>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <configuration>
+                    <!--配置参考了http://stackoverflow.com/questions/3445075/maven-releaseperform-without-deploy-and-calling-an-external-shell-script-->
+                    <goals>install</goals>
+                    <tagNameFormat>@{project.version}</tagNameFormat>
+                    <checkModificationExcludeList>.idea,.iml,.project,.classpath</checkModificationExcludeList>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
