@@ -21,7 +21,7 @@ or
 ```batch
 .\fixvhdwr.bat rawPath vhdPath maxSector
 ```
-You could add this folder📁 your system environment variables, and run
+You could add this folder📁 to your system environment variables, and run
 ```batch
 fixvhdwr rawPath vhdPath maxSector
 ```
