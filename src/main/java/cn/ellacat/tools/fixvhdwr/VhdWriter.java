@@ -6,25 +6,32 @@ import java.util.UUID;
 
 /**
  * @author wjc133
+ * @edited Astrageldon
  */
 public class VhdWriter {
     /**
      * 写入数据到VHD文件
      *
      * @param rawFilePath 原始二进制数据文件路径(由nasm生成的二进制文件)
-     * @param vhdFilePath VHD文件的路径。如果路径为空，默认使用user目录下生成raw.vhd，若路径不存在，则创建
-     * @param maxSector   最大写入扇区数，0为不限制
+     * @param vhdFilePath VHD文件的路径
+     * @param maxSector   最大写入扇区数
      */
-    public void write(String rawFilePath, String vhdFilePath, int maxSector) throws IOException {
-        File rawFile = getRawFile(rawFilePath);
-        System.out.println("Write start, rawFile is " + rawFile.length() + " bytes.");
-        File vhdFile = getVhdFile(vhdFilePath);
-        byte[] rawData = getRawData(rawFile, maxSector);
-        if (rawFile.length() < 512) {
-            rawData[510] = (byte)0x55;
-            rawData[511] = (byte)0xAA;
+
+    private byte[] filebuffer;
+    private Footer footer;
+    File vhdFile;
+
+    VhdWriter(String mbrRawFilePath, String vhdFilePath, int maxSectors) throws IOException {
+        File mbrRawFile = getRawFile(mbrRawFilePath);
+        System.out.println("mbrRawFile is " + mbrRawFile.length() + " bytes.");
+        vhdFile = getVhdFile(vhdFilePath);
+        filebuffer = getMbrRawData(mbrRawFile, maxSectors);
+        if (mbrRawFile.length() < 512) {
+            filebuffer[510] = (byte) 0x55;
+            filebuffer[511] = (byte) 0xAA;
+            System.out.println("Automatically supplied magic footer for sector 0.");
         }
-        Footer footer = buildFooter(rawFile, vhdFile);
+        footer = buildFooter(maxSectors);
         if (!vhdFile.exists()) {
             createNewFile(vhdFile);
             String hexStr = UUID.randomUUID().toString().replaceAll("-", "");
@@ -35,18 +42,28 @@ public class VhdWriter {
                 String hexStr = UUID.randomUUID().toString().replaceAll("-", "");
                 footer.setUUID(ByteUtils.toBytes(hexStr));
             } else {
-                System.out.println("Reuse already existing VHD uuid " + ByteUtils.toUUID(vhd_uuid));
+                System.out.println("Reusing already existing VHD uuid " + ByteUtils.toUUID(vhd_uuid));
                 footer.setUUID(vhd_uuid);
             }
         }
-        writeRawData2Vhd(rawData, vhdFile);
-        writeFooter2Vhd(footer, vhdFile);
-        System.out.println("Write finish, vhdFile is " + vhdFile.length() + " bytes.");
     }
 
-    private Footer buildFooter(File rawFile, File vhdFile) {
+    public void update(String rawFilePath, int sectorIndex) throws IOException, IndexOutOfBoundsException {
+        System.out.println("Writing " + rawFilePath + " to sector " + sectorIndex);
+        File rawFile = getRawFile(rawFilePath);
+        byte[] buffer = getRawData(rawFile);
+        System.arraycopy(buffer, 0, filebuffer, sectorIndex * 512, buffer.length);
+    }
+
+    public void finish() throws IOException{
+        writeRawData2Vhd(filebuffer, vhdFile);
+        writeFooter2Vhd(footer, vhdFile);
+        System.out.println("Task finished, vhdFile is " + vhdFile.length() + " bytes.");
+    }
+
+    private Footer buildFooter(int maxSectors) {
         Footer footer = new Footer();
-        long size = rawFile.length() > 512 ? rawFile.length() : 512;
+        long size = maxSectors * 512;
         footer.setCurrSize(size);
         footer.setOrigSize(size);
         return footer;
@@ -66,7 +83,7 @@ public class VhdWriter {
     private void createNewFile(File file) throws IOException {
         boolean success = file.createNewFile();
         if (!success) {
-            throw new IllegalArgumentException("权限不足");
+            throw new IllegalArgumentException("Permission denied.");
         }
     }
 
@@ -85,9 +102,17 @@ public class VhdWriter {
         return uuid;
     }
 
-    private byte[] getRawData(File rawFile, int maxSector) throws IOException {
-        byte[] buffer = new byte[maxSector * 512];
-        FileInputStream input = new FileInputStream(rawFile);
+    private byte[] getMbrRawData(File mbrRawFile, int maxSectors) throws IOException {
+        byte[] buffer = new byte[maxSectors * 512];
+        FileInputStream input = new FileInputStream(mbrRawFile);
+        input.read(buffer);
+        input.close();
+        return buffer;
+    }
+
+    private byte[] getRawData(File mbrRawFile) throws IOException {
+        FileInputStream input = new FileInputStream(mbrRawFile);
+        byte[] buffer = new byte[((int)mbrRawFile.length() + 511) >> 9 << 9];
         input.read(buffer);
         input.close();
         return buffer;
@@ -96,7 +121,7 @@ public class VhdWriter {
     private File getRawFile(String rawFilePath) throws FileNotFoundException {
         File file = new File(rawFilePath);
         if (!file.exists()) {
-            throw new FileNotFoundException("raw file is not exist");
+            throw new FileNotFoundException("Raw file " + rawFilePath + " does not exist.");
         }
         return file;
     }

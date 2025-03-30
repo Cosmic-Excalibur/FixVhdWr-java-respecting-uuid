@@ -2,51 +2,63 @@
 
 Fixed-size VHD writer.
 
-Modified from [https://gitee.com/wu-liubing/FixVhdWr-java](https://gitee.com/wu-liubing/FixVhdWr-java) respecting UUID's of already-existing .vhd files and the magic `0xAA55` of 1st sectors.
+Modified from [https://gitee.com/wu-liubing/FixVhdWr-java](https://gitee.com/wu-liubing/FixVhdWr-java) respecting UUID's of already-existing .vhd files and the magic `0xAA55` of sector 0.
 
-Writing .bin files in `rawPath` to a .vhd in `vhdPath` with `maxSector`.
+Inserting .bin files in a .vhd with `maxSectors` sectors.
 ```
-Usage: fixvhdwr <rawPath> <vhdPath> <maxSector>
+Usage: fixvhdwr <mbrRawPath> <vhdPath> <maxSectors> [rawPath1] [sectorIndex1] [rawPath2] [sectorIndex2] ...
 ```
 
 ## Run!!🏃‍♂️
 
-U need a Java☕, of course.
+U need a Java☕ to run this, of course.
 
-Download the release and unzip `fixvhdwr.jar`, `fixvhdwr.bat` to a folder📁, then
+Download the release and unzip `fixvhdwr.jar`, `fixvhdwr.bat` to a folder📁, then run
 ```batch
-java -jar `fixvhdwr.jar` rawPath vhdPath maxSector
+java -jar `fixvhdwr.jar` rawPath vhdPath maxSectors ...
 ```
 or
 ```batch
-.\fixvhdwr.bat rawPath vhdPath maxSector
+.\fixvhdwr.bat rawPath vhdPath maxSectors ...
 ```
 You could add this folder📁 to your system environment variables, and run
 ```batch
-fixvhdwr rawPath vhdPath maxSector
+fixvhdwr rawPath vhdPath maxSectors ...
 ```
 
-Assume u got a `176`-bytes raw .bin file, you may see
+Assume u got a `176`-bytes raw .bin file as an mbr, you might see
 ```
-Write start, rawFile is 176 bytes.
-Write finish, vhdFile is 1024 bytes.
-DONE.
+mbrRawFile is 176 bytes.
+Task finished, vhdFile is 1024 bytes.
 ```
 or
 ```
-Write start, rawFile is 176 bytes.
+mbrRawFile is 176 bytes.
 Reuse already existing VHD uuid aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
-Write finish, vhdFile is 1024 bytes.
+Task finished, vhdFile is 1024 bytes.
 DONE.
 ```
 if you are overwriting a .vhd with uuid `aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa`.
 
-There's no need to pad the raw .bin file to 512 bytes (given that the length of raw .bin file is < 512 bytes) and supply the footer magic `0xAA55`.
+As an example in Chapter 8 of the original book [https://github.com/liracle/codeOfAssembly/tree/master/booktool/c08](https://github.com/liracle/codeOfAssembly/tree/master/booktool/c08), run
+```batch
+fixvhdwr .\c08_mbr.bin .\c08.vhd 102 .\c08.bin 100
+```
+and you shall see
+```
+mbrRawFile is 512 bytes.
+Writing .\c08.bin to sector 100
+Task finished, vhdFile is 52736 bytes.
+```
+which completes the creation of needed .vhd files.
 
-I suppose this should be convenient while working an Oracle VirtualBox vm using a .vhd as mbr :3
+Ps. There's no need to pad your mbr to 512 bytes (if it's < 512 bytes) or supply the magic footer `0xAA55`.
 
 
+## Changelog📜
 
+- **2025-03-26:** Forked from [https://gitee.com/wu-liubing/FixVhdWr-java](https://gitee.com/wu-liubing/FixVhdWr-java). Added uuid & magic footer features.
+- **2025-03-31:** Added multi .bin file support.
 
 
 

@@ -7,6 +7,7 @@ import java.util.Date;
 
 /**
  * @author wjc133
+ * @edited Astrageldon
  */
 public class Footer {
     /**
@@ -203,12 +204,12 @@ public class Footer {
                 '}';
     }
 
-    public byte[] toBytes(int sections) {
+    public byte[] toBytes(int sectors) {
         // TODO: 18-4-21 生成字节数组
         Date now = new Date();
         int sec = (int) (now.getTime() / 1000);
         this.timestamp = sec - 0xB492F400;
-        this.geometry = GeometryCalculator.getGeometry(sections);
+        this.geometry = GeometryCalculator.getGeometry(sectors);
         ChecksumCalculator.gen(this);
 
         ByteBuffer buffer = ByteBuffer.allocate(512);

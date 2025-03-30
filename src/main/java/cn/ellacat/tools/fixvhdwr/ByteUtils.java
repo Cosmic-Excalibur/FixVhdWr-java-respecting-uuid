@@ -2,6 +2,7 @@ package cn.ellacat.tools.fixvhdwr;
 
 /**
  * @author wjc133
+ * @edited Astrageldon
  */
 public class ByteUtils {
     /**
